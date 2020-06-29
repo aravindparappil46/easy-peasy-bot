@@ -1,12 +1,4 @@
-/**
- * A Bot for Slack!
- */
-
-
-/**
- * Define a function for initiating a conversation on installation
- * With custom integrations, we don't have a way to find out who installed us, so we can't message them :(
- */
+require('dotenv').config();
 
 function onInstallation(bot, installer) {
     if (installer) {
@@ -41,31 +33,28 @@ if (process.env.MONGOLAB_URI) {
 /**
  * Are being run as an app or a custom integration? The initialization will differ, depending
  */
-
 if (process.env.TOKEN || process.env.SLACK_TOKEN) {
-    //Treat this as a custom integration
     var customIntegration = require('./lib/custom_integrations');
     var token = (process.env.TOKEN) ? process.env.TOKEN : process.env.SLACK_TOKEN;
     var controller = customIntegration.configure(token, config, onInstallation);
 } else if (process.env.CLIENT_ID && process.env.CLIENT_SECRET && process.env.PORT) {
     //Treat this as an app
     var app = require('./lib/apps');
+    console.log("THIS IS AN APPPPPPP")
     var controller = app.configure(process.env.PORT, process.env.CLIENT_ID, process.env.CLIENT_SECRET, config, onInstallation);
 } else {
     console.log('Error: If this is a custom integration, please specify TOKEN in the environment. If this is an app, please specify CLIENTID, CLIENTSECRET, and PORT in the environment');
     process.exit(1);
 }
 
+/*
+TOKEN=xoxb-668260705975-1210452763826-170nGxY5cjAdac9Dl8djUICu
+var customIntegration = require('./lib/custom_integrations');
+var token = 'xoxb-668260705975-1210452763826-170nGxY5cjAdac9Dl8djUICu'//(process.env.TOKEN) ? process.env.TOKEN : process.env.SLACK_TOKEN;
+var controller = customIntegration.configure(token, config, onInstallation);
+*/
 
-/**
- * A demonstration for how to handle websocket events. In this case, just log when we have and have not
- * been disconnected from the websocket. In the future, it would be super awesome to be able to specify
- * a reconnect policy, and do reconnections automatically. In the meantime, we aren't going to attempt reconnects,
- * WHICH IS A B0RKED WAY TO HANDLE BEING DISCONNECTED. So we need to fix this.
- *
- * TODO: fixed b0rked reconnect behavior
- */
-// Handle events related to the websocket connection to Slack
+
 controller.on('rtm_open', function (bot) {
     console.log('** The RTM api just connected!');
 });
@@ -81,12 +70,120 @@ controller.on('rtm_close', function (bot) {
  */
 // BEGIN EDITING HERE!
 
-controller.on('bot_channel_join', function (bot, message) {
-    bot.reply(message, "I'm here!")
+
+controller.hears(['bamboo access', 'hi'], 'direct_message', function (bot, message) {
+    /*
+     bot.reply(message, {
+        attachments:[
+            {
+                title: 'Do you want to interact with my buttons?',
+                callback_id: '1237',
+                attachment_type: 'default',
+                actions: [
+                    {
+                        "name":"yes",
+                        "text": "Yes",
+                        "value": "yes",
+                        "type": "button",
+                    },
+                    {
+                        "name":"no",
+                        "text": "No",
+                        "value": "no",
+                        "type": "button",
+                    }
+                ]
+            }
+        ]
+    });*/
+
+   bot.startConversation(message, function(err, convo) {
+
+    // create a path for when a user says YES
+    convo.addMessage({
+            text: 'You said yes! How wonderful.',
+    },'yes_thread');
+
+    // create a path for when a user says NO
+    convo.addMessage({
+        text: 'You said no, that is too bad.',
+    },'no_thread');
+
+    // create a path where neither option was matched
+    // this message has an action field, which directs botkit to go back to the `default` thread after sending this message.
+    convo.addMessage({
+        text: 'Sorry I did not understand.',
+        action: 'default',
+    },'bad_response');
+
+    // Create a yes/no question in the default thread...
+    convo.addQuestion('Do you like cheese?', [
+        {
+            pattern: 'yes',
+            callback: function(response, convo) {
+                convo.gotoThread('yes_thread');
+            },
+        },
+        {
+            pattern: 'no',
+            callback: function(response, convo) {
+                convo.gotoThread('no_thread');
+            },
+        },
+        {
+            default: true,
+            callback: function(response, convo) {
+                convo.gotoThread('bad_response');
+            },
+        }
+    ],{},'default');
+
+    convo.activate();
 });
 
-controller.hears('hello', 'direct_message', function (bot, message) {
-    bot.reply(message, 'Hello!');
+});
+
+/*
+// receive an interactive message, and reply with a message that will replace the original
+controller.on('interactive_message_callback', function(bot, message) {
+    console.log("===============herererere")
+    bot.replyInteractive(message, {
+        text: '...Lets gooooo',
+        attachments: [
+            {
+                title: 'My buttons',
+                callback_id: '123',
+                attachment_type: 'default',
+                actions: [
+                    {
+                        "name":"yes",
+                        "text": "Yes!",
+                        "value": "yes",
+                        "type": "button",
+                    },
+                    {
+                       "text": "No!",
+                        "name": "no",
+                        "value": "delete",
+                        "style": "danger",
+                        "type": "button",
+                        "confirm": {
+                          "title": "Are you sure?",
+                          "text": "This will do something!",
+                          "ok_text": "Yes",
+                          "dismiss_text": "No"
+                        }
+                    }
+                ]
+            }
+        ]
+    });
+});
+*/
+
+
+controller.hears(['access', 'blah'], 'direct_message', function (bot, message) {
+    bot.reply(message, 'wassss!');
 });
 
 
@@ -94,15 +191,15 @@ controller.hears('hello', 'direct_message', function (bot, message) {
  * AN example of what could be:
  * Any un-handled direct mention gets a reaction and a pat response!
  */
-//controller.on('direct_message,mention,direct_mention', function (bot, message) {
-//    bot.api.reactions.add({
-//        timestamp: message.ts,
-//        channel: message.channel,
-//        name: 'robot_face',
-//    }, function (err) {
-//        if (err) {
-//            console.log(err)
-//        }
-//        bot.reply(message, 'I heard you loud and clear boss.');
-//    });
-//});
+controller.on('direct_message', function (bot, message) {
+    bot.api.reactions.add({
+        timestamp: message.ts,
+        channel: message.channel,
+        name: 'robot_face',
+    }, function (err) {
+        if (err) {
+            console.log(err)
+        }
+        bot.reply(message, 'I.....dont understand');
+    });
+});
