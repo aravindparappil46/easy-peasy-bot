@@ -1,0 +1,32 @@
+[
+    {
+        "name":"bamboo_access",
+        "text": "I need access to Bamboo",
+        "value": "bamboo_access",
+        "type": "button"
+    },
+    {
+        "name":"nr_access",
+        "text": "I need access to New Relic",
+        "value": "nr_access",
+        "type": "button"
+    },
+    {
+        "name":"zeus_access",
+        "text": "I need access to Zeus",
+        "value": "zeus_access",
+        "type": "button"
+    },
+    {
+        "name":"build_fail",
+        "text": "My Bamboo builds are failing!",
+        "value": "build_fail",
+        "type": "button"
+    },
+    {
+        "name":"no",
+        "text": "No. I have a different question",
+        "value": "no",
+        "type": "button"
+    }
+]

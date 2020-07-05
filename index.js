@@ -72,58 +72,33 @@ controller.on('rtm_close', function (bot) {
 
 
 controller.hears(['bamboo access', 'hi'], 'direct_message', function (bot, message) {
-    /*
-     bot.reply(message, {
-        attachments:[
-            {
-                title: 'Do you want to interact with my buttons?',
-                callback_id: '1237',
-                attachment_type: 'default',
-                actions: [
-                    {
-                        "name":"yes",
-                        "text": "Yes",
-                        "value": "yes",
-                        "type": "button",
-                    },
-                    {
-                        "name":"no",
-                        "text": "No",
-                        "value": "no",
-                        "type": "button",
-                    }
-                ]
-            }
-        ]
-    });*/
-
    bot.startConversation(message, function(err, convo) {
-convo.addMessage('This is the end!', 'new');
+    convo.addMessage('This is the end!', 'new');
 
-    convo.addQuestion('what to do now?', [
+    convo.addQuestion('Do you know who your Squad Lead is?? ', [
         {
             pattern: 'yes',
             callback: function(response,convo) {
-              convo.say('OK you are done!');
+              convo.say('Ask them to check if you are in the right AD group!');
               convo.next();
             }
         }, 
         {
-            pattern: 'noo',
+            pattern: 'no',
             callback: function(response,convo) {
                 console.log("==>", response)
-                convo.addQuestion('why not?', [
+                convo.addQuestion('Thats bad. Figure that out first and try again!', [
                         {
-                            pattern:'idk', 
+                            pattern:'ok', 
                             callback: function(response,convo) {
-                                    convo.say('doofus');
+                                    convo.say('See you soon!');
                                     convo.next();
                             } 
                 }, 
             {
-                                pattern:'bcoz', 
+                                pattern:'no', 
                             callback: function(response,convo) {
-                                    convo.say('kaay');
+                                    convo.say('That is out of my control! Sorry!');
                                     convo.next();
                             } 
             }
@@ -132,7 +107,7 @@ convo.addMessage('This is the end!', 'new');
             }
         },
         {
-            pattern: 'go',
+            pattern: 'bye',
             callback: function(response,convo) {
              convo.transitionTo("new", "going")
               convo.next();
@@ -144,6 +119,77 @@ convo.addMessage('This is the end!', 'new');
     convo.activate();
 });
 
+});
+
+let faq = require('./faq.json');
+
+controller.hears(['access', 'help'], 'direct_message', function (bot, message) {
+    bot.startConversation(message, function(err, convo) {
+        convo.ask({
+            attachments:[
+                {
+                    title: 'Can I help you with any of these?',
+                    callback_id: '123',
+                    attachment_type: 'default',
+                    actions: faq
+                }
+            ]
+        },[
+            {
+                pattern: "bamboo_access",
+                callback: function(reply, convo) {
+                    convo.say('If you are in the right AD group, you already have Bamboo access!');
+                    convo.next();
+                }
+            },
+            {
+                pattern: "nr_access",
+                callback: function(reply, convo) {
+                    convo.say('Raise a ticket lolz');
+                    convo.next();
+                }
+            },
+            {
+                pattern: "zeus_access",
+                callback: function(reply, convo) {
+                    convo.say('Ask a Zeus admin to create an account for you!');
+                    convo.next();
+                }
+            },
+            {
+                pattern: "build_fail",
+                callback: function(reply, convo) {
+                    convo.say('Have you tried running it again? If it still breaks, raise a ticket and post in our slack channel!');
+                    convo.next();
+                }
+            },
+            {
+                pattern: "no",
+                callback: function(reply, convo) {
+                   
+                }
+            },
+            {
+                default: true,
+                callback: function(reply, convo) {
+                    convo.say("I\'m sorry. I didn't understand your request :(")
+                }
+            }
+        ]);
+    });
+});
+
+controller.on('direct_message', function (bot, message) {
+    bot.api.reactions.add({
+        timestamp: message.ts,
+        channel: message.channel,
+        name: 'robot_face',
+    }, function (err) {
+        if (err) {
+            console.log(err)
+        }
+        bot.reply(message, 'I\'m sorry. I do not understand :(');
+    });
 });
 
 /*
@@ -184,25 +230,3 @@ controller.on('interactive_message_callback', function(bot, message) {
 });
 */
 
-
-controller.hears(['access', 'blah'], 'direct_message', function (bot, message) {
-    bot.reply(message, 'wassss!');
-});
-
-
-/**
- * AN example of what could be:
- * Any un-handled direct mention gets a reaction and a pat response!
- */
-controller.on('direct_message', function (bot, message) {
-    bot.api.reactions.add({
-        timestamp: message.ts,
-        channel: message.channel,
-        name: 'robot_face',
-    }, function (err) {
-        if (err) {
-            console.log(err)
-        }
-        bot.reply(message, 'I.....dont understand');
-    });
-});
